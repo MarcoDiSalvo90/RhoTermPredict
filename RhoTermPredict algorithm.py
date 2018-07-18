@@ -3,12 +3,10 @@ import matplotlib.pyplot as plt
 import re
 from Bio import SeqIO
 from Bio.Seq import Seq
+import openpyxl
 
-
-def palindrome_control(sequenza,GC_genome,strand):
+def palindrome_control(sequenza,GC_genoma,strand):
     palindr = 0
-    pattern_pause_site1 = "G\D{8}[C,T]G"
-    pattern_pause_site2 = "C[G,A]\D{8}C" 
     sequenza = Seq(sequenza)
     sequenza_r = sequenza.reverse_complement()
     for k in range (4,8):
@@ -42,12 +40,12 @@ def palindrome_control(sequenza,GC_genome,strand):
     return palindr
 
 
-def palindrome_finder(sequenza,file,GC_genome,strand,score):
+def palindrome_finder(sequenza,file,GC_genoma,strand,score):
     lista_scores = []
     sequenza = Seq(sequenza)
     sequenza_r = sequenza.reverse_complement()
-    pattern_pause_site1 = "G\D{8}[C,T]G"
-    pattern_pause_site2 = "C[G,A]\D{8}C" 
+    pattern_pause_site1 = "GG\D{8}[C,T]G"
+    pattern_pause_site2 = "C[G,A]\D{8}CC" 
     for k in range (4,8):
         for i in range (150):
             x1 = i
@@ -86,9 +84,9 @@ def palindrome_finder(sequenza,file,GC_genome,strand,score):
                             file.write(str(window))
                             file.write(")")
                             score_p += 3
-                            if gc_content > GC_genome+20:
+                            if gc_content > GC_genoma+20:
                                 score_p += 2
-                            elif gc_content > GC_genome+10:
+                            elif gc_content > GC_genoma+10:
                                 score_p += 1
                             if len(window) > 4:
                                 score_p += 1
@@ -121,232 +119,13 @@ def palindrome_finder(sequenza,file,GC_genome,strand,score):
     else:
         return 0
                         
-                    
-def gc_rich (sequenza,file,GC_genome,strand,score):
-    pattern_pause_site1 = "G\D{8}[C,T]G"
-    pattern_pause_site2 = "C[G,A]\D{8}C"
-    xt = 0
-    yt = 0 
-    end = 0
-    lista_scores = []
-    for i in range (150):
-        x = i
-        y = 15 + i
-        if y > len(sequenza):
-            break
-        else:
-            seq = sequenza[x:y]
-            gc = 100*(seq.count("C") + seq.count("G"))/len(seq)
-            if gc >= GC_genome + 20:
-                if x <= yt+1:
-                    yt = y
-                    if x > 0:
-                        end += 1
-                else:
-                    if end > 0:
-                        score_p = score
-                        score_p += 3
-                        rg = sequenza[xt:yt]
-                        gc_rg = 100*(rg.count("C") + rg.count("G"))/len(rg)
-                        if gc_rg > 85:
-                            score_p += 3
-                        elif gc_rg > 80:
-                            score_p += 2
-                        elif gc_rg > 70:
-                            score_p += 1
-                        if len(rg) > 15:
-                            score_p += 1
-                        file.write("\nExtended GC-rich region. Coordinates: ")
-                        file.write(str(xt))
-                        file.write("-")
-                        file.write(str(yt))
-                        file.write(" (GC% = ")
-                        file.write(str(gc_rg))
-                        if strand == 1:
-                            a = xt-5
-                            b = yt+5
-                            seq_pause = sequenza[a:b]
-                            seq_pause = str(seq_pause)
-                            if re.search(pattern_pause_site1,seq_pause):
-                                score_p += 3
-                                file.write(", PAUSE-CONSENSUS PRESENT")
-                        if strand == -1:
-                            a = xt-5
-                            b = yt+5
-                            seq_pause = sequenza[a:b]
-                            seq_pause = str(seq_pause)
-                            if re.search(pattern_pause_site2,seq_pause):
-                                score_p += 3
-                                file.write(", PAUSE-CONSENSUS PRESENT")
-                        file.write(", SCORE = ")
-                        file.write(str(score_p))
-                        file.write(")  ")
-                        file.write(str(rg))
-                        file.write("\n")
-                        lista_scores.append(score_p)
-                    else:
-                        if xt > 0:
-                            score_p = score
-                            score_p += 3
-                            rg = sequenza[xt:yt]
-                            gc_rg = 100*(rg.count("C") + rg.count("G"))/len(rg)
-                            if gc_rg > 85:
-                                score_p += 3
-                            elif gc_rg > 80:
-                                score_p += 2
-                            elif gc_rg > 70:
-                                score_p += 1
-                            if len(rg) > 15:
-                                score_p += 1
-                            file.write("\n15 nt long GC-rich region. Coordinates: ")
-                            file.write(str(xt))
-                            file.write("-")
-                            file.write(str(yt))
-                            file.write(" (GC% = ")
-                            file.write(str(gc_rg))
-                            file.write(")  ")
-                            file.write(str(rg))
-                            if strand == 1:
-                                a = xt-5
-                                b = yt+5
-                                seq_pause = sequenza[a:b]
-                                seq_pause = str(seq_pause)
-                                if re.search(pattern_pause_site1,seq_pause):
-                                    score_p += 3
-                                    file.write(", PAUSE-CONSENSUS PRESENT")
-                            if strand == -1:
-                                a = xt-5
-                                b = yt+5
-                                seq_pause = sequenza[a:b]
-                                seq_pause = str(seq_pause)
-                                if re.search(pattern_pause_site2,seq_pause):
-                                    score_p += 3
-                                    file.write(", PAUSE-CONSENSUS PRESENT")
-                            file.write(", SCORE = ")
-                            file.write(str(score_p))
-                            file.write(")  ")
-                            file.write(str(rg))
-                            file.write("\n")
-                            lista_scores.append(score_p)
-                    xt = x
-                    yt = y
-                    end = 0
-        
-    if yt-xt >= 15:
-        if end > 0:
-            score_p = score
-            score_p += 3
-            rg = sequenza[xt:yt]
-            gc_rg = 100*(rg.count("C") + rg.count("G"))/len(rg)
-            if gc_rg > 85:
-                score_p += 3
-            elif gc_rg > 80:
-                score_p += 2
-            elif gc_rg > 70:
-                score_p += 1
-            if len(rg) > 15:
-                score_p += 1
-            file.write("\nExtended GC-rich region. Coordinates: ")
-            file.write(str(xt))
-            file.write("-")
-            file.write(str(yt))
-            file.write(" (GC% = ")
-            file.write(str(gc_rg))
-            if strand == 1:
-                a = xt-5
-                b = yt+5
-                seq_pause = sequenza[a:b]
-                seq_pause = str(seq_pause)
-                if re.search(pattern_pause_site1,seq_pause):
-                    score_p += 3
-                    file.write(", PAUSE-CONSENSUS PRESENT")
-            if strand == -1:
-                a = xt-5
-                b = yt+5
-                seq_pause = sequenza[a:b]
-                seq_pause = str(seq_pause)
-                if re.search(pattern_pause_site2,seq_pause):
-                    score_p += 3
-                    file.write(", PAUSE-CONSENSUS PRESENT")
-            file.write(", SCORE = ")
-            file.write(str(score_p))
-            file.write(")  ")
-            file.write(str(rg))
-            file.write("\n")
-            lista_scores.append(score_p)
-        else:
-            if xt > 0:
-                score_p = score
-                score_p += 3
-                rg = sequenza[xt:yt]
-                gc_rg = 100*(rg.count("C") + rg.count("G"))/len(rg)
-                if gc_rg > 85:
-                    score_p += 3
-                elif gc_rg > 80:
-                    score_p += 2
-                elif gc_rg > 70:
-                    score_p += 1
-                if len(rg) > 15:
-                    score_p += 1
-                file.write("\n15 nt long GC-rich region. Coordinates: ")
-                file.write(str(xt))
-                file.write("-")
-                file.write(str(yt))
-                file.write(" (GC% = ")
-                file.write(str(gc_rg))
-                if strand == 1:
-                    a = xt-5
-                    b = yt+5
-                    seq_pause = sequenza[a:b]
-                    seq_pause = str(seq_pause)
-                    if re.search(pattern_pause_site1,seq_pause):
-                        score_p += 3
-                        file.write(", PAUSE-CONSENSUS PRESENT")
-                if strand == -1:
-                    a = xt-5
-                    b = yt+5
-                    seq_pause = sequenza[a:b]
-                    seq_pause = str(seq_pause)
-                    if re.search(pattern_pause_site2,seq_pause):
-                        score_p += 3
-                        file.write(", PAUSE-CONSENSUS PRESENT")
-                file.write(", SCORE = ")
-                file.write(str(score_p))
-                file.write(")  ")
-                file.write(str(rg))
-                file.write("\n")
-                lista_scores.append(score_p)
-    
-    if len(lista_scores) > 0:
-        return np.max(lista_scores)
-    else:
-        return 0
-        
-                
-                
-
-def gc_rich_control (sequenza,GC_genome,strand):
-    OK = 0
-    pattern_pause_site1 = "G\D{8}[C,T]G"
-    pattern_pause_site2 = "C[G,A]\D{8}C" 
-    for i in range (150):
-        x = i
-        y = 15 + i
-        if y > len(sequenza):
-            break
-        else:
-            seq = sequenza[x:y]
-            gc = 100*(seq.count("C") + seq.count("G"))/len(seq)
-            if gc >= GC_genome + 20:
-                OK += 1
-    return OK
     
 
 MC = []
 
 print("RhoTermPredict is a genome-wide predictor of transcription Rho-dependent terminators in bacterial genomes. It analyzes both the strands.\n\n")
 print("Input: Genome sequences file")
-print("Output: a text file containing Rho-dependent terminators coordinates and a file containing informations about them")
+print("Output: a xlsx file containing Rho-dependent terminators coordinates and a txt file containing informations about them")
 print("Genome file must be in fasta format")
 File_genome = input("Enter the input genome file name: ")
 
@@ -359,13 +138,21 @@ try:
     GC_whole_genome = 100*(genome.count("G")+genome.count("C"))/len(genome)
     pattern1 = "C\D{11,13}C\D{11,13}C\D{11,13}C\D{11,13}C\D{11,13}C"
     pattern2 = "G\D{11,13}G\D{11,13}G\D{11,13}G\D{11,13}G\D{11,13}G"
+    pattern_pause_site1 = "GG\D{8}[C,T]G"
+    pattern_pause_site2 = "C[G,A]\D{8}CC" 
     predictions = 0
     cg_value = []
     punteggi = []
+    num = 1
     cod = 1
     
-    q = open("Rho-dependent terminators coordinates.txt","a")
-    q.write("Region        Start RUT        End RUT        Strand\n")
+    nuovo_file = openpyxl.Workbook()
+    sheet = nuovo_file.active
+    sheet.title = "predictions"   #definisce un nome per il foglio di lavoro
+    sheet["A1"] = "Region"
+    sheet["B1"] = "Start RUT"
+    sheet["C1"] = "End RUT"
+    sheet["D1"] = "Strand"
     
     p = open("Informations about predictions.txt","a")
     p.write("Sequences of predicted Rho-dependent terminators")
@@ -416,19 +203,18 @@ try:
                     w = genome[x1:x2]
                     score = 3
                     ctrl = palindrome_control(s,GC_whole_genome,1)
-                    ctrl2 = gc_rich_control(s,GC_whole_genome,1)
-                    if ctrl > 0 or ctrl2 > 0:
-                        scale = x2 + 150 - j - 1
-                        q.write("\nT")
-                        q.write(str(cod))
-                        q.write("          ")
-                        q.write(str(x1))
-                        q.write("          ")
-                        q.write(str(x2))
-                        q.write("          plus")
+                    if ctrl > 0 or re.search(pattern_pause_site1,s):
+                        sheet["A%d"%(num+1)] = "T%d"%(cod)
+                        sheet["B%d"%(num+1)] = x1
+                        sheet["C%d"%(num+1)] = x2
+                        sheet["D%d"%(num+1)] = "plus"
+                        num += 1
                         predictions += 1
+                        scale = x2 + 150 - j - 1
                         cg_value.append(rapporto)
-                        if rapporto > 1.50:
+                        if rapporto > 2:
+                            score += 3
+                        elif rapporto > 1.50:
                             score += 2
                         elif rapporto > 1.25:
                             score += 1
@@ -447,14 +233,28 @@ try:
                         p.write(str(s))
                         p.write("\n")
                         cod += 1
-                        final_score1 = 0
-                        final_score2 = 0
-                        final_score1 = palindrome_finder(s,p,GC_whole_genome,1,score)
-                        final_score2 = gc_rich(s,p,GC_whole_genome,1,score)
-                        if final_score1 > final_score2:
-                            punteggi.append(final_score1)
-                        else:
-                            punteggi.append(final_score2)
+                        final_score = 0
+                        final_score = palindrome_finder(s,p,GC_whole_genome,1,score)
+                        par = 0
+                        while True:
+                            if re.search(pattern_pause_site1,s):
+                                ricerca = re.search(pattern_pause_site1,s)
+                                positions = ricerca.span()
+                                x2 = positions[0]
+                                y2 = positions[1]
+                                s = s[y2:]
+                                p.write("\n\nPAUSE-CONSENSUS present at the coordinates ")
+                                p.write(str(x2))
+                                p.write("-")
+                                p.write(str(y2))
+                                x2 += par
+                                y2 += par
+                            else:
+                                break
+                        if final_score == 0:
+                            final_score = score + 3
+                        punteggi.append(final_score)    
+                        
 
     #negative strand
     
@@ -502,19 +302,18 @@ try:
                     w = genome[x1:x2]
                     score = 3
                     ctrl = palindrome_control(s,GC_whole_genome,-1)
-                    ctrl2 = gc_rich_control(s,GC_whole_genome,-1)
-                    if ctrl > 0 or ctrl2 > 0:
-                        scale = x2 + 150 - j - 1
-                        q.write("\nT")
-                        q.write(str(cod))
-                        q.write("          ")
-                        q.write(str(x1))
-                        q.write("          ")
-                        q.write(str(x2))
-                        q.write("          minus")
+                    if ctrl > 0 or re.search(pattern_pause_site2,s):
+                        sheet["A%d"%(num+1)] = "T%d"%(cod)
+                        sheet["B%d"%(num+1)] = x1
+                        sheet["C%d"%(num+1)] = x2
+                        sheet["D%d"%(num+1)] = "minus"
+                        num += 1
                         predictions += 1
+                        scale = x2 + 150 - j - 1
                         cg_value.append(rapporto)
-                        if rapporto > 1.50:
+                        if rapporto > 2:
+                            score += 3
+                        elif rapporto > 1.50:
                             score += 2
                         elif rapporto > 1.25:
                             score += 1
@@ -533,14 +332,27 @@ try:
                         p.write(str(s))
                         p.write("\n")
                         cod += 1
-                        final_score1 = 0
-                        final_score2 = 0
-                        final_score1 = palindrome_finder(s,p,GC_whole_genome,-1,score)
-                        final_score2 = gc_rich(s,p,GC_whole_genome,-1,score)
-                        if final_score1 > final_score2:
-                            punteggi.append(final_score1)
-                        else:
-                            punteggi.append(final_score2)
+                        final_score = 0
+                        final_score = palindrome_finder(s,p,GC_whole_genome,-1,score)
+                        par = 0
+                        while True:
+                            if re.search(pattern_pause_site2,s):
+                                ricerca = re.search(pattern_pause_site2,s)
+                                positions = ricerca.span()
+                                x2 = positions[0]
+                                y2 = positions[1]
+                                s = s[y2:]
+                                p.write("\n\nPAUSE-CONSENSUS present at the coordinates ")
+                                p.write(str(x2))
+                                p.write("-")
+                                p.write(str(y2))
+                                x2 += par
+                                y2 += par
+                            else:
+                                break
+                        if final_score == 0:
+                            final_score = score + 3
+                        punteggi.append(final_score)
     
    
     p.write("\n\n\n\n\n\nTotal number of predicted Rho-dependent terminators: ")
@@ -551,7 +363,7 @@ try:
     p.write(str(np.std(cg_value)))
         
     p.close()
-    q.close()
+    nuovo_file.save('Rho-dependent terminators coordinates.xlsx')
     
     print("Work finished, see output files in the current directory")
     
