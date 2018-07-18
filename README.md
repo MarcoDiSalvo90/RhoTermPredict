@@ -9,4 +9,4 @@ INPUT: genome sequences file in fasta format
 OUTPUT: a xlsx file containing the coordinates of predicted Rho-dependent terminators and a txt file cointaining some informations about predictions
 
 
-DOI:  https://zenodo.org/badge/latestdoi/139411046
+DOI:  https://doi.org/10.5281/zenodo.1314156
