@@ -1,0 +1,4 @@
+.idea/*
+predictions_coordinates.csv
+informations_about_predictions.txt
+sequence.fna
