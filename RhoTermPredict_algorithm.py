@@ -5,40 +5,8 @@ from Bio.Seq import Seq
 import csv
 
 
-def palindrome_control(sequence):
+def palindrome_finder(sequence, file=None, gc_genome=None, strand=None, score=None, calc="no"):
     n_rut = 0
-    sequence = Seq(sequence)
-    sequence_r = str(sequence.reverse_complement())
-    for k in range(4, 8):
-        for n in range(150):
-            _x1 = n
-            _y1 = n + k
-            if _y1 > len(sequence):
-                break
-            else:
-                window = sequence[_x1:_y1]
-                window = str(window)
-                sub_sequence_r = sequence_r
-                _start = 0
-                while True:
-                    if re.search(window, sub_sequence_r):   # try findall
-                        _research = re.search(window, sub_sequence_r)
-                        _positions = _research.span()
-                        _x2 = _positions[0]
-                        _y2 = _positions[1]
-                        sub_sequence_r = sub_sequence_r[_y2:]
-                        _x2 += _start
-                        _y2 += _start
-                        _start += _y2
-                        if 4 <= len(sequence)-_y2 - _y1 + 1 <= 8:
-                            n_rut += 1
-                            break
-                    else:
-                        break
-    return n_rut
-
-
-def palindrome_finder(sequence, file, gc_genome, strand, score):
     list_scores = []
     sequence = Seq(sequence)
     sequence_r = str(sequence.reverse_complement())
@@ -68,51 +36,58 @@ def palindrome_finder(sequence, file, gc_genome, strand, score):
                         _y2 += _start
                         _start += _y2
                         if 4 <= len(sequence)-_y2-_y1+1 <= 8:
-                            loop = len(sequence)-_y2-_y1
-                            file.write("\nPalindromic sequences found at coordinates ")
-                            file.write(str(_x1))
-                            file.write("-")
-                            file.write(str(_y1-1))
-                            file.write(" e ")
-                            file.write(str(len(sequence)-_y2))
-                            file.write("-")
-                            file.write(str(len(sequence)-_x2-1))
-                            file.write("(Sequence:   ")
-                            file.write(str(window))
-                            file.write(")")
-                            score_p += 3
-                            if gc_content > gc_genome + 20:
-                                score_p += 2
-                            elif gc_content > gc_genome + 10:
-                                score_p += 1
-                            if len(window) > 4:
-                                score_p += 1
-                            if loop < 6:
-                                score_p += 1
-                            if strand == 1:
-                                a = _x1-5
-                                b = len(sequence)-_x2+5
-                                seq_pause = str(sequence[a:b])
-                                if re.search(_pattern_pause_site1, seq_pause):
-                                    score_p += 3
-                                    file.write(" (PAUSE-CONSENSUS PRESENT)")
-                            if strand == -1:
-                                a = _x1-5
-                                b = len(sequence)-_x2+5
-                                seq_pause = str(sequence[a:b])
-                                if re.search(_pattern_pause_site2, seq_pause):
-                                    score_p += 3
-                                    file.write(" (PAUSE-CONSENSUS PRESENT)")
-                            file.write(" (SCORE: ")
-                            file.write(str(score_p))
-                            file.write(")")
-                            list_scores.append(score_p)
+                            if calc == "yes":
+                                loop = len(sequence)-_y2-_y1
+                                file.write("\nPalindromic sequences found at coordinates ")
+                                file.write(str(_x1))
+                                file.write("-")
+                                file.write(str(_y1-1))
+                                file.write(" e ")
+                                file.write(str(len(sequence)-_y2))
+                                file.write("-")
+                                file.write(str(len(sequence)-_x2-1))
+                                file.write("(Sequence:   ")
+                                file.write(str(window))
+                                file.write(")")
+                                score_p += 3
+                                if gc_content > gc_genome + 20:
+                                    score_p += 2
+                                elif gc_content > gc_genome + 10:
+                                    score_p += 1
+                                if len(window) > 4:
+                                    score_p += 1
+                                if loop < 6:
+                                    score_p += 1
+                                if strand == 1:
+                                    a = _x1-5
+                                    b = len(sequence)-_x2+5
+                                    seq_pause = str(sequence[a:b])
+                                    if re.search(_pattern_pause_site1, seq_pause):
+                                        score_p += 3
+                                        file.write(" (PAUSE-CONSENSUS PRESENT)")
+                                if strand == -1:
+                                    a = _x1-5
+                                    b = len(sequence)-_x2+5
+                                    seq_pause = str(sequence[a:b])
+                                    if re.search(_pattern_pause_site2, seq_pause):
+                                        score_p += 3
+                                        file.write(" (PAUSE-CONSENSUS PRESENT)")
+                                file.write(" (SCORE: ")
+                                file.write(str(score_p))
+                                file.write(")")
+                                list_scores.append(score_p)
+                            else:
+                                n_rut += 1
                     else:
                         break
-    if len(list_scores) > 0:
-        return np.max(list_scores)
-    else:
-        return 0
+    if calc == "yes":
+        if len(list_scores) > 0:
+            return np.max(list_scores)
+        else:
+            return 0
+    elif calc == "no":
+        return n_rut
+
                         
 
 sequences_to_analyze = {}
@@ -198,7 +173,7 @@ try:
                         s = genome[x2:x2+150]
                         w = genome[x1:x2]
                         score = 3
-                        ctrl = palindrome_control(s)
+                        ctrl = palindrome_finder(s)
                         if ctrl > 0 or re.search(pattern_pause_site1, s):
                             writer.writerow([f'T{cod}', x1, x2, 'plus'])
                             num += 1
@@ -226,7 +201,7 @@ try:
                             p.write(str(s))
                             p.write("\n")
                             cod += 1
-                            final_score = palindrome_finder(s, p, gc_whole_genome, 1, score)
+                            final_score = palindrome_finder(s, p, gc_whole_genome, 1, score, calc="yes")
                             start = 0
                             while True:
                                 if re.search(pattern_pause_site1, s):
@@ -291,7 +266,7 @@ try:
                         s = genome[x1-150:x1]
                         w = genome[x1:x2]
                         score = 3
-                        ctrl = palindrome_control(s)
+                        ctrl = palindrome_finder(s)
                         if ctrl > 0 or re.search(pattern_pause_site2, s):
                             writer.writerow([f'T{cod}', x1, x2, 'minus'])
                             num += 1
@@ -319,12 +294,12 @@ try:
                             p.write(str(s))
                             p.write("\n")
                             cod += 1
-                            final_score = palindrome_finder(s, p, gc_whole_genome, -1, score)
+                            final_score = palindrome_finder(s, p, gc_whole_genome, -1, score, calc="yes")
                             start = 0
                             while True:
                                 if re.search(pattern_pause_site2, s):
-                                    ricerca = re.search(pattern_pause_site2, s)
-                                    positions = ricerca.span()
+                                    research = re.search(pattern_pause_site2, s)
+                                    positions = research.span()
                                     x2 = positions[0]
                                     y2 = positions[1]
                                     s = s[y2:]
