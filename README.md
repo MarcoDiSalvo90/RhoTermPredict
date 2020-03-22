@@ -7,6 +7,3 @@ RhoTermPredict is an algorithm for the prediction of Rho-dependent transcription
 INPUT: genome sequences file in fasta format
 
 OUTPUT: a csv file containing the coordinates of predicted Rho-dependent terminators and a txt file cointaining some informations about predictions
-
-
-DOI:  https://doi.org/10.5281/zenodo.1968045
